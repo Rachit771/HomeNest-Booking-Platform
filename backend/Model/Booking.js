@@ -28,15 +28,13 @@ const BookingSchema = new mongoose.Schema({
   status: {
     type: String,
     enum: [
-      "INITIATED",
       "PAYMENT_PENDING",
       "CONFIRMED",
       "CANCELLED",
-      "REFUNDED",
-      "COMPLETED"
     ],
-    default: "INITIATED"
-  }
+    default: "PAYMENT_PENDING"
+  },
+  expiresAt: {type:Date}
 }, { timestamps: true });
 
 module.exports = mongoose.model("Booking", BookingSchema);

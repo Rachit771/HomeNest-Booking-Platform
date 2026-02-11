@@ -6,6 +6,7 @@ const express = require('express');
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
 const MongoDBStore = require('connect-mongodb-session')(session);
+const { connectRedis } = require('./config/redis');
 
 // Local Module
 const storeRouter = require("./routes/storeRouter");
@@ -57,6 +58,7 @@ const PORT = 5000;
 
 (async () => {
   await connectDB();
+  await connectRedis();
   app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
   });

@@ -3,11 +3,11 @@
   "version": "1.0.0",
   "description": "",
   "main": "app.js",
-"scripts": {
-  "dev": "concurrently \"nodemon app.js\" \"tailwindcss -i ./public/css/input.css -o ./public/css/output.css --watch\"",
-  "build:css": "tailwindcss -i ./public/css/input.css -o ./public/css/output.css",
-  "start": "node app.js"
-},
+  "scripts": {
+    "dev": "concurrently \"nodemon app.js\" \"tailwindcss -i ./public/css/input.css -o ./public/css/output.css --watch\"",
+    "build:css": "tailwindcss -i ./public/css/input.css -o ./public/css/output.css",
+    "start": "node app.js"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -26,6 +26,7 @@
     "express-validator": "^7.2.1",
     "mongodb": "^6.19.0",
     "mongoose": "^8.18.1",
+    "redis": "^5.10.0",
     "session": "^0.1.0"
   },
   "devDependencies": {
