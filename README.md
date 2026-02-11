@@ -1,61 +1,164 @@
-**Project Architecture & Flow**
-**Overall Flow**
-**When a user visits the application, the request follows this path:**
+**System Architecture**
+**Overall Request Flow**
+Client → Nginx (Reverse Proxy) → Node.js Application → Redis → MongoDB
 
-Client → Load Balancer (Nginx) → Node.js App Server → Redis (cache/locks) → MongoDB
 
-This ensures scalability, performance, and data consistency.
+The system is designed as a containerized modular monolith using Docker.
+Nginx acts as the public entry point, forwarding requests to the backend application.
 
-**1️⃣ Client Layer**
+**1️. Client Layer (Server-Side Rendering)**
 
-The client interacts with the application through server-side rendered views using EJS.
-All pages are rendered on the server and sent to the browser as fully built HTML.
+The application uses EJS (Embedded JavaScript) for server-side rendering.
 
-**2️⃣ Reverse Proxy Layer (Nginx)**
+All views are rendered on the server.
 
-Nginx acts as a reverse proxy in front of the application servers. It:
+Fully generated HTML is sent to the browser.
 
-Handles SSL (HTTPS)
+Improves simplicity and SEO.
 
-Routes incoming traffic to the correct server
+Reduces frontend complexity compared to SPA architecture.
 
-Supports load balancing (for horizontal scaling in the future)
+**2️. Reverse Proxy Layer – Nginx**
 
-This improves security and scalability.
+Nginx runs in a separate Docker container and serves as the entry point for all incoming traffic.
 
-**3️⃣ Application Layer (Node.js)**
+Responsibilities:
 
-This is the core of the system.
+Acts as a reverse proxy to the Node.js backend.
 
-The application is structured into:
+Forwards requests from port 80 to the backend container.
 
-Controllers – Handle incoming requests
+Prevents direct public exposure of the backend service.
 
-Services – Contain business logic
+Designed to support future horizontal scaling.
 
-Booking logic – Includes conflict resolution to prevent double bookings
+Ready to support SSL termination (HTTPS) in production environments.
 
-This layer processes requests, applies business rules, and communicates with Redis and MongoDB.
+Currently running over HTTP. SSL can be added via certificate configuration.
 
-**4️⃣ Caching Layer (Redis) – Upcoming**
+This setup improves modularity and production-readiness.
 
-Redis is used to improve performance and reliability.
+**3️. Application Layer – Node.js (Express)**
 
-It will handle:
+The backend follows a layered architecture:
 
-Caching frequently requested property listings
+routes → controllers → services → models
 
-Rate limiting requests
+Responsibilities:
 
-Temporary booking locks to prevent race conditions during checkout
+Handle HTTP requests and responses
 
-This reduces database load and improves response times.
+Execute business logic
 
-**5️⃣ Database Layer (MongoDB)**
-MongoDB stores all persistent data including users, properties, and bookings.
+Prevent double booking using transactional logic
 
-Optimizations include:
+Communicate with Redis for caching and locks
 
-Indexed queries for faster searches
+Interact with MongoDB for persistent storage
 
-TTL (Time-To-Live) indexes for automatic payment expiration cleanup
+Booking Conflict Prevention
+
+To prevent double booking:
+
+MongoDB transactions are used.
+
+Overlapping date ranges are checked using:
+
+startDate < existing.endDate
+endDate > existing.startDate
+
+
+Only bookings with:
+
+CONFIRMED
+
+PAYMENT_PENDING (not expired)
+
+are considered blocking.
+
+This ensures data consistency under concurrent requests.
+
+**4️. Caching & Concurrency Layer – Redis**
+
+Redis is integrated to improve performance and reliability.
+
+Responsibilities:
+
+Cache frequently accessed property listings
+
+Implement request rate limiting
+
+Support temporary booking locks during checkout
+
+Reduce database load
+
+This layer improves response time and scalability.
+
+**5️. Database Layer – MongoDB**
+
+MongoDB is used for persistent storage.
+
+Collections:
+
+Users
+
+Properties
+
+Bookings
+
+Reviews
+
+Messages (if implemented)
+
+Optimizations:
+
+Compound indexes on:
+
+{ homeId: 1, startDate: 1, endDate: 1 }
+
+
+TTL index on expiresAt field to auto-delete expired PAYMENT_PENDING bookings.
+
+This ensures:
+
+Fast conflict detection
+
+Efficient search queries
+
+Automatic cleanup of stale bookings
+
+** Scalability Strategy**
+The system is designed to scale horizontally:
+
+Multiple Node.js instances can run behind Nginx.
+
+Nginx can be configured for load balancing.
+
+Redis reduces database pressure.
+
+MongoDB replica set can support high availability.
+
+** Security Considerations**
+Backend service is not directly exposed to the internet.
+
+Reverse proxy provides controlled traffic routing.
+
+Booking transactions ensure atomic operations.
+
+Rate limiting (via Redis) prevents abuse.
+
+** Deployment**
+
+The application is containerized using Docker and orchestrated with Docker Compose.
+
+Services include:
+
+Nginx
+
+Node.js backend
+
+MongoDB
+
+Redis
+
+This ensures consistent development and production environments.
