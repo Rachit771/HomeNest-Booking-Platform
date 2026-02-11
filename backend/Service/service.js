@@ -1,39 +1,42 @@
+const mongoose = require('mongoose');
 const Booking = require('../Model/Booking');
 
-/**
- * Internal helper — can still be exported if you want
- */
-async function CheckAvailability(homeId, startDate, endDate) {
-  const conflict = await Booking.findOne({
-    homeId,
-    status: { $ne: 'CANCELLED' },
-    startDate: { $lt: endDate },
-    endDate: { $gt: startDate },
-  });
-
-  return !conflict;
-}
-
 async function createBooking(userId, homeId, startDate, endDate) {
-  // 👇 availability check happens INSIDE booking creation
-  const isAvailable = await CheckAvailability(homeId, startDate, endDate);
+  const session = await mongoose.startSession();
+  session.startTransaction();
 
-  if (!isAvailable) {
-    throw new Error('Home already booked for selected dates');
+  try {
+    //  IMPORTANT: pass session to queries
+
+    const conflict = await Booking.findOne({
+      homeId,
+      status: { $ne: 'CANCELLED' },
+      startDate: { $lt: endDate },
+      endDate: { $gt: startDate }
+    }).session(session);
+
+    if (conflict) {
+      throw new Error('Home already booked');
+    }
+
+    const booking = await Booking.create([{
+      userId,
+      homeId,
+      startDate,
+      endDate,
+      status: 'PAYMENT_PENDING'
+    }], { session });
+
+    await session.commitTransaction();
+    session.endSession();
+
+    return booking[0];
+
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw error;
   }
-
-  return await Booking.create({
-    userId,
-    homeId,
-    startDate,
-    endDate,
-    status: 'PAYMENT_PENDING',
-  });
 }
-
-module.exports = {
-  createBooking,
-  CheckAvailability, // optional export
-};
-
+module.exports={createBooking}
 
