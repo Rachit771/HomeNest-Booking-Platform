@@ -14,15 +14,13 @@ All views are rendered on the server.
 
 Fully generated HTML is sent to the browser.
 
-Improves simplicity and SEO.
-
 Reduces frontend complexity compared to SPA architecture.
 
 **2️. Reverse Proxy Layer – Nginx**
 
 Nginx runs in a separate Docker container and serves as the entry point for all incoming traffic.
 
-Responsibilities:
+**Responsibilities:**
 
 Acts as a reverse proxy to the Node.js backend.
 
@@ -40,11 +38,11 @@ This setup improves modularity and production-readiness.
 
 **3️. Application Layer – Node.js (Express)**
 
-The backend follows a layered architecture:
+**The backend follows a layered architecture:**
 
 routes → controllers → services → models
 
-Responsibilities:
+**Responsibilities:**
 
 Handle HTTP requests and responses
 
@@ -58,7 +56,7 @@ Interact with MongoDB for persistent storage
 
 Booking Conflict Prevention
 
-To prevent double booking:
+**To prevent double booking:**
 
 MongoDB transactions are used.
 
@@ -68,7 +66,7 @@ startDate < existing.endDate
 endDate > existing.startDate
 
 
-Only bookings with:
+**Only bookings with:**
 
 CONFIRMED
 
@@ -82,7 +80,7 @@ This ensures data consistency under concurrent requests.
 
 Redis is integrated to improve performance and reliability.
 
-Responsibilities:
+**Responsibilities:**
 
 Cache frequently accessed property listings
 
@@ -127,8 +125,8 @@ Efficient search queries
 
 Automatic cleanup of stale bookings
 
-** Scalability Strategy**
-The system is designed to scale horizontally:
+**Scalability Strategy**
+**The system is designed to scale horizontally:**
 
 Multiple Node.js instances can run behind Nginx.
 
@@ -138,7 +136,7 @@ Redis reduces database pressure.
 
 MongoDB replica set can support high availability.
 
-** Security Considerations**
+**Security Considerations**
 Backend service is not directly exposed to the internet.
 
 Reverse proxy provides controlled traffic routing.
@@ -147,11 +145,11 @@ Booking transactions ensure atomic operations.
 
 Rate limiting (via Redis) prevents abuse.
 
-** Deployment**
+**Deployment**
 
 The application is containerized using Docker and orchestrated with Docker Compose.
 
-Services include:
+**Services include:**
 
 Nginx
 
