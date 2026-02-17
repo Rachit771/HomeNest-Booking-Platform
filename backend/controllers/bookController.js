@@ -1,31 +1,61 @@
 const {createBooking,confirmBooking,cancelBooking}=require('../Service/service') 
-exports.createBookingController=async (req,res)=>{
-  try{
-    const {userId, homeId, startDate, endDate}=req.body;
-    const booking=await createBooking(userId, homeId, startDate, endDate);
-    res.status(201).json({'message':'Booking Created Succesfully',booking})
+exports.createBookingController = async (req, res) => {
+  try {
+    const { homeId, startDate, endDate } = req.body;
+
+    const booking = await createBooking(
+      req.session.user._id, // NEVER trust body for userId
+      homeId,
+      startDate,
+      endDate
+    );
+
+    return res.status(201).json({
+      message: "Booking created successfully",
+      booking
+    });
+
+  } catch (err) {
+    return res.status(400).json({
+      message: err.message || "Failed to create booking"
+    });
   }
-  catch{
-    res.status(500).json({'message':'Internal server error'})
+};
+
+exports.cancelBookingController = async (req, res) => {
+  try {
+    const booking = await cancelBooking(
+      req.params.id,
+      req.session.user._id
+    );
+
+    return res.status(200).json({
+      message: "Booking cancelled successfully",
+      booking
+    });
+
+  } catch (err) {
+    return res.status(400).json({
+      message: err.message || "Failed to cancel booking"
+    });
   }
-}
-exports.cancelBookingController=async (req,res)=>{
-  try{
-    const id=req.params.id;
-    const booking=await cancelBooking(id);
-    res.status(200).json({'message':'Cancelled Succesfully',booking})
+};
+
+exports.confirmBookingController = async (req, res) => {
+  try {
+    const booking = await confirmBooking(
+      req.params.id,
+      req.session.user._id
+    );
+
+    return res.status(200).json({
+      message: "Booking confirmed successfully",
+      booking
+    });
+
+  } catch (err) {
+    return res.status(400).json({
+      message: err.message || "Failed to confirm booking"
+    });
   }
-  catch{
-    res.status(500).json({'message':'Internal server error'})
-  }
-}
-exports.confirmBookingController=async (req,res)=>{
-  try{
-    const id=req.params.id;
-    const booking=await confirmBooking(id);
-    res.status(200).json({'message':'Booked Succesfully',booking})
-  }
-  catch{
-    res.status(500).json({'message':'Internal server error'})
-  }
-}
+};

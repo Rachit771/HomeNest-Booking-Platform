@@ -41,19 +41,64 @@ async function createBooking(userId, homeId, startDate, endDate) {
     session.endSession();
     throw error;
   }
+   finally {
+  session.endSession();
 }
-async function confirmBooking(bookingId,userId){
-  const booking=  await Booking.findOneAndUpdate(
-      {_id:bookingId,userId,status:"PAYMENT_PENDING",expiresAt: { $gt: new Date() }},                        //filter
-      {$set:{status:"CONFIRMED"},
-      $unset: { expiresAt: "" }},                                   //Update
-      {new:true}                                                     //new:true will return updated document
-    )
-  if(!booking) {
-    throw new Error("Booking cannot be confirmed");
+}
+async function confirmBooking(bookingId, userId) {
+  const now = new Date();
+
+  // 1️  atomic state transition
+  const result = await Booking.updateOne(
+    {
+      _id: bookingId,
+      userId,
+      status: "PAYMENT_PENDING",
+      expiresAt: { $gt: now } // not expired
+    },
+    {
+      $set: { status: "CONFIRMED" },
+      $unset: { expiresAt: "" }
+    }
+  );
+
+  // 2️ If successfully modified → first confirmation
+  if (result.modifiedCount === 1) {
+    return await Booking.findById(bookingId);
   }
-  return booking;
+
+  // 3️ If not modified, check current state
+  const booking = await Booking.findOne({
+    _id: bookingId,
+    userId
+  });
+
+  if (!booking) {
+    throw new Error("Booking not found or unauthorized");
+  }
+
+  // 4️ Idempotent success (already confirmed)
+  if (booking.status === "CONFIRMED") {
+    return booking;
+  }
+
+  // 5️ Cannot confirm cancelled booking
+  if (booking.status === "CANCELLED") {
+    throw new Error("Booking already cancelled");
+  }
+
+  // 6️ Expired booking
+  if (
+    booking.status === "PAYMENT_PENDING" &&
+    booking.expiresAt <= now
+  ) {
+    throw new Error("Booking expired");
+  }
+
+  // 7️ Any other unexpected state
+  throw new Error("Booking cannot be confirmed");
 }
+
 async function cancelBooking(bookingId, userId) {
   const booking = await Booking.findOneAndUpdate(
     {
