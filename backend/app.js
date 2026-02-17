@@ -12,6 +12,7 @@ const { connectRedis } = require('./config/redis');
 const storeRouter = require("./routes/storeRouter");
 const hostRouter = require("./routes/hostRouter");
 const authRouter = require("./routes/authRouter");
+const bookingRouter=require('./routes/bookingRoute')
 const rootDir = require("./utils/pathutil");
 const errorcontroller = require('./controllers/error');
 const { connectDB, DB } = require('./config/db');
@@ -44,12 +45,16 @@ app.use((req, res, next) => {
 
 app.use(authRouter);
 app.use(storeRouter);
-
 app.use("/host", (req, res, next) => {
   if (req.isLoggedIn) next();
   else res.redirect("/login");
 });
+app.use("/bookings", (req, res, next) => {
+  if (req.isLoggedIn) next();
+  else res.redirect("/login");
+});
 
+app.use("/bookings",bookingRouter);
 app.use("/host", hostRouter);
 
 app.use(errorcontroller.pageNotFound);

@@ -7,12 +7,12 @@ async function createBooking(userId, homeId, startDate, endDate) {
 
   try {
     //  IMPORTANT: pass session to queries
-
+     const now = new Date();
     const conflict = await Booking.findOne({
       homeId,
      $or: [
     { status: "CONFIRMED" },
-    { status: "PAYMENT_PENDING", expiresAt: { $gt: now } }
+    { status: "PAYMENT_PENDING", expiresAt: { $gt: now } } //"Only include bookings whose expiration time is still in the future."
   ],
       startDate: { $lt: endDate },
       endDate: { $gt: startDate }
@@ -28,7 +28,7 @@ async function createBooking(userId, homeId, startDate, endDate) {
       startDate,
       endDate,
       status: 'PAYMENT_PENDING',
-      expiresAt: new Date(Date.now() + 15 * 60 * 1000) 
+      expiresAt: new Date(Date.now() + 15 * 60 * 1000) //  // Booking expires in 15 minutes
     }], { session });
 
     await session.commitTransaction();
@@ -42,9 +42,9 @@ async function createBooking(userId, homeId, startDate, endDate) {
     throw error;
   }
 }
-async function confirmBooking(bookingId){
+async function confirmBooking(bookingId,userId){
   const booking=  await Booking.findOneAndUpdate(
-      {_id:bookingId,status:"PAYMENT_PENDING"},                        //filter
+      {_id:bookingId,userId,status:"PAYMENT_PENDING",expiresAt: { $gt: new Date() }},                        //filter
       {$set:{status:"CONFIRMED"},
       $unset: { expiresAt: "" }},                                   //Update
       {new:true}                                                     //new:true will return updated document
@@ -54,17 +54,26 @@ async function confirmBooking(bookingId){
   }
   return booking;
 }
-async function cancelBooking(bookingId){
-  const booking=await Booking.findOneAndUpdate(
-    {_id:bookingId,status:"CONFIRMED"},
-    {$set:{status:"CANCELLED"}},
-    {new:true}
-  )
-    if(!booking) {
-    throw new Error("Booking cannot be Cancelled");
+async function cancelBooking(bookingId, userId) {
+  const booking = await Booking.findOneAndUpdate(
+    {
+      _id: bookingId,
+      userId,
+      status: { $in: ["CONFIRMED", "PAYMENT_PENDING"] }
+    },
+    {
+      $set: { status: "CANCELLED" }
+    },
+    { new: true }
+  );
+
+  if (!booking) {
+    throw new Error("Booking cannot be cancelled");
   }
+
   return booking;
 }
 
-module.exports={createBooking}
+
+module.exports={createBooking,confirmBooking,cancelBooking}
 

@@ -36,5 +36,10 @@ const BookingSchema = new mongoose.Schema({
   },
   expiresAt: {type:Date}
 }, { timestamps: true });
+// For availability check (most critical query)
+BookingSchema.index({ homeId: 1, startDate: 1, endDate: 1, status: 1 });
+
+// For expiry-based queries (if you later clean expired bookings)
+BookingSchema.index({ status: 1, expiresAt: 1 });
 
 module.exports = mongoose.model("Booking", BookingSchema);
