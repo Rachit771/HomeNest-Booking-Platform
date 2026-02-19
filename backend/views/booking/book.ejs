@@ -1,0 +1,100 @@
+<%- include('../partials/head') %>
+</head>
+<body class="bg-gray-100">
+  <%- include('../partials/nav') %>
+
+  <main class="container mx-auto mt-10 p-6 max-w-4xl">
+    <div class="bg-white shadow-lg rounded-xl p-8">
+
+      <!-- Title -->
+      <h2 class="text-3xl font-bold text-red-500 text-center mb-8">
+        Book Your Stay
+      </h2>
+
+      <!-- Booking Form -->
+      <form action="/Book/book/<%= home._id %>" method="POST" class="space-y-6">
+
+        <!-- House Info -->
+        <div class="flex items-center gap-6 border-b pb-6">
+          <img 
+            src="<%= home.photoUrl %>" 
+            class="w-40 h-28 object-cover rounded-lg shadow"
+          />
+          <div>
+            <h3 class="text-xl font-semibold"><%= home.houseName %></h3>
+            <p class="text-gray-600"><%= home.location %></p>
+            <p class="text-red-500 font-bold mt-2">
+              ₹<%= home.price %> / night
+            </p>
+          </div>
+        </div>
+
+        <!-- Dates -->
+        <div class="grid md:grid-cols-2 gap-6">
+          <div>
+            <label class="block text-gray-700 font-medium mb-2">
+              Check-in Date
+            </label>
+            <input 
+              type="date" 
+              name="startDate" 
+              required
+              class="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-red-400 outline-none"
+            />
+          </div>
+
+          <div>
+            <label class="block text-gray-700 font-medium mb-2">
+              Check-out Date
+            </label>
+            <input 
+              type="date" 
+              name="endDate" 
+              required
+              class="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-red-400 outline-none"
+            />
+          </div>
+        </div>
+
+        <!-- Guests -->
+        <div>
+          <label class="block text-gray-700 font-medium mb-2">
+            Number of Guests
+          </label>
+          <input 
+            type="number" 
+            name="guests" 
+            min="1" 
+            required
+            class="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-red-400 outline-none"
+          />
+        </div>
+
+        <!-- Special Requests -->
+        <div>
+          <label class="block text-gray-700 font-medium mb-2">
+            Special Requests
+          </label>
+          <textarea 
+            name="requests"
+            rows="3"
+            class="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-red-400 outline-none"
+            placeholder="Any additional requests..."
+          ></textarea>
+        </div>
+
+        <!-- Submit -->
+        <div class="text-center">
+          <button 
+            type="submit"
+            class="bg-red-500 hover:bg-red-600 text-white px-8 py-3 rounded-lg font-semibold transition"
+          >
+            Confirm Booking
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </main>
+</body>
+</html>

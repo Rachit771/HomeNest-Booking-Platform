@@ -5,9 +5,9 @@ const path = require('path');
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
-const MongoDBStore = require('connect-mongodb-session')(session);
+const MongoStore = require('connect-mongo').default || require('connect-mongo'); //require('connect-mongo').default → picks the ES module default export if it exists|| require('connect-mongo') → fallback for CommonJS style (older versions or Node quirks)
 const { connectRedis } = require('./config/redis');
-
+const methodOverride = require('method-override');
 // Local Module
 const storeRouter = require("./routes/storeRouter");
 const hostRouter = require("./routes/hostRouter");
@@ -24,29 +24,31 @@ app.set('views', 'views');
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(rootDir, 'public')));
-
-// session store
-const store = new MongoDBStore({
-  uri: DB,
-  collection: 'sessions'
-});
+app.use(methodOverride('_method'));
 
 app.use(session({
   secret: "Rachitxed",
   resave: false,
   saveUninitialized: true,
-  store
+  store:MongoStore.create({
+    mongoUrl: DB,
+    collectionName: 'sessions'
+})
 }));
+app.use((req, res, next) => {
+  console.log("Incoming request:", req.method, req.url, "isLoggedIn=", req.session.isLoggedIn);
+  next(); 
+});
 
 app.use((req, res, next) => {
-  req.isLoggedIn = req.session.isLoggedIn;
+  req.isLoggedIn = req.session.isLoggedIn;             //req.isLoggedIn = true
   next();
 });
 
 app.use(authRouter);
 app.use(storeRouter);
 app.use("/host", (req, res, next) => {
-  if (req.isLoggedIn) next();
+  if (req.isLoggedIn) next(); 
   else res.redirect("/login");
 });
 app.use("/bookings", (req, res, next) => {
@@ -54,7 +56,7 @@ app.use("/bookings", (req, res, next) => {
   else res.redirect("/login");
 });
 
-app.use("/bookings",bookingRouter);
+app.use("/Book",bookingRouter);
 app.use("/host", hostRouter);
 
 app.use(errorcontroller.pageNotFound);
@@ -63,7 +65,6 @@ const PORT = 5000;
 
 (async () => {
   await connectDB();
-  await connectRedis();
   app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
   });

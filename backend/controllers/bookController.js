@@ -1,61 +1,115 @@
 const {createBooking,confirmBooking,cancelBooking}=require('../Service/service') 
+const Home = require("../Model/homes");
 exports.createBookingController = async (req, res) => {
   try {
-    const { homeId, startDate, endDate } = req.body;
-
+    const {startDate, endDate ,guests, requests} = req.body;
+    const homeId=req.params.id
     const booking = await createBooking(
-      req.session.user._id, // NEVER trust body for userId
+      req.session.user._id,
       homeId,
       startDate,
       endDate
     );
 
-    return res.status(201).json({
-      message: "Booking created successfully",
-      booking
-    });
+    // Redirect to bookings page after success
+    res.redirect("/Book/bookings");
 
   } catch (err) {
-    return res.status(400).json({
-      message: err.message || "Failed to create booking"
+    res.status(400).render("404", {
+      pageTitle: "Booking Failed",
+      currentPage: "Failed to create booking",
+      isLoggedIn: req.isLoggedIn,
+      user: req.session.user,
     });
   }
 };
+
 
 exports.cancelBookingController = async (req, res) => {
   try {
-    const booking = await cancelBooking(
+    await cancelBooking(
       req.params.id,
       req.session.user._id
     );
 
-    return res.status(200).json({
-      message: "Booking cancelled successfully",
-      booking
-    });
+    res.redirect("/Book/bookings");
 
   } catch (err) {
-    return res.status(400).json({
-      message: err.message || "Failed to cancel booking"
+     console.log("Cancel Error:", err.message);
+    res.status(400).render("404", {
+      pageTitle: "Cancel Failed",
+      currentPage: "Failed to cancel booking",
+      isLoggedIn: req.isLoggedIn,
+      user: req.session.user,
     });
   }
 };
 
+
 exports.confirmBookingController = async (req, res) => {
   try {
-    const booking = await confirmBooking(
+    await confirmBooking(
       req.params.id,
       req.session.user._id
     );
 
-    return res.status(200).json({
-      message: "Booking confirmed successfully",
-      booking
+    res.redirect("/Book/bookings");
+
+  } catch (err) {
+    res.status(400).render("404", {
+      pageTitle: "Confirm Failed",
+      currentPage:"Failed to confirm booking",
+      isLoggedIn: req.isLoggedIn,
+      user: req.session.user,
+    });
+  }
+};
+
+exports.getBookingPage = async (req, res) => {
+  try {
+    const home = await Home.findById(req.params.id);
+
+    if (!home) {
+      return res.status(404).render("404");
+    }
+
+    res.render("booking/book", {
+      home,
+      pageTitle: "Book Home",
+      currentPage: "Bookings",
+      isLoggedIn: req.isLoggedIn,
+      user: req.session.user,
     });
 
   } catch (err) {
-    return res.status(400).json({
-      message: err.message || "Failed to confirm booking"
+    res.status(500).render("404");
+  }
+};
+
+const Booking = require("../Model/Booking");
+
+exports.getUserBookings = async (req, res) => {
+  try {
+    const bookings = await Booking.find({
+      userId: req.session.user._id
+    })
+      .populate("homeId")
+      .sort({ createdAt: -1 });
+
+    res.render("booking/bookings-list", {
+      bookings,
+      pageTitle: "My Bookings",
+      currentPage: "Bookings",
+      isLoggedIn: req.isLoggedIn,
+      user: req.session.user,
+    });
+
+  } catch (err) {
+    res.status(500).render("404", {
+      pageTitle: "Failed to load bookings",
+      currentPage: "Bookings",
+      isLoggedIn: req.isLoggedIn,
+      user: req.session.user,
     });
   }
 };

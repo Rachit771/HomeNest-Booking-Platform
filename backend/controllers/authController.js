@@ -115,8 +115,11 @@ exports.postSignup = [
 
 exports.postLogin = async (req, res, next) => {
   const {email, password} = req.body;
+  console.log('login route hit')
   const user = await User.findOne({email});
+  console.log("User found:", user);
   if (!user) {
+    console.log("User not found");
     return res.status(422).render("auth/login", {
       pageTitle: "Login",
       currentPage: "login",
@@ -129,9 +132,10 @@ exports.postLogin = async (req, res, next) => {
 
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) {
+    console.log("password doesnt match")
     return res.status(422).render("auth/login", {
       pageTitle: "Login",
-      currentPage: "login",
+      currentPage: "login", 
       isLoggedIn: false,
       errors: ["Invalid Password"],
       oldInput: {email},
@@ -141,6 +145,7 @@ exports.postLogin = async (req, res, next) => {
 
   req.session.isLoggedIn = true;
   req.session.user = user;
+  console.log("Before save:", req.session); 
   await req.session.save();
 
   res.redirect("/");

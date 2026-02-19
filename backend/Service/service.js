@@ -100,10 +100,10 @@ async function confirmBooking(bookingId, userId) {
 }
 
 async function cancelBooking(bookingId, userId) {
-  const booking = await Booking.findOneAndUpdate(
+ const booking = await Booking.findOneAndUpdate(
     {
       _id: bookingId,
-      userId,
+      userId: userId,
       status: { $in: ["CONFIRMED", "PAYMENT_PENDING"] }
     },
     {
@@ -117,6 +117,7 @@ async function cancelBooking(bookingId, userId) {
   }
 
   return booking;
+
 }
 
 
