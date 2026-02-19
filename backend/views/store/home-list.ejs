@@ -22,8 +22,29 @@
                   <span class="text-gray-700"><%= home.rating %></span>
                 </div>
               </div>
-              <a href="/homes/<%=home._id %>" class="bg-blue-300 p-2">Details</a>
-                 <%- include('../partials/favourite',{home:home}) %>
+              <div class="flex items-center gap-3 mt-4">
+  <!-- Book Now -->
+  <a 
+  href="/Book/book/<%= home._id %>"
+    class="flex-1 text-center bg-red-500 hover:bg-red-600 text-white font-semibold py-2 rounded transition"
+  >
+    Book Now
+  </a>
+
+  <!-- Details -->
+  <a 
+    href="/homes/<%= home._id %>"
+    class="flex-1 text-center bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 rounded transition"
+  >
+    Details
+  </a>
+
+  <!-- Favourite -->
+  <div class="flex items-center justify-center">
+    <%- include('../partials/favourite',{ home }) %>
+  </div>
+</div>
+
             </div>
           </div>
         <% }) %>

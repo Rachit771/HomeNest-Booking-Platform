@@ -1,17 +1,29 @@
 const Home = require("../Model/homes");
 const Favourite=require("../Model/favourite")
 const User=require("../Model/user");
-exports.getIndex = (req, res, next) => {
-  Home.find().then((registeredHomes) =>
-    res.render("store/index", {
-      registeredHomes: registeredHomes,
+exports.getIndex = (req, res) => {
+  // Not logged in → show landing page
+  if (!req.isLoggedIn) {
+    return res.render("store/index", {
+      registeredHomes:[],
       pageTitle: "airbnb Home",
       currentPage: "index",
-      isLoggedIn:req.isLoggedIn,
-      user: req.session.user,
-    })
-  );
+      isLoggedIn: false,
+      user: null,
+    });
+  }
+
+  // Logged in as guest → redirect to homes
+  if (req.session.user.userType === "guest") {
+    return res.redirect("/homes");
+  }
+
+  // Logged in as host → redirect to host homes
+  if (req.session.user.userType === "host") {
+    return res.redirect("/host/host-home-list");
+  }
 };
+
 
 exports.getHomes = (req, res, next) => {
   Home.find().then((registeredHomes) =>
