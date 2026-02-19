@@ -25,9 +25,9 @@ app.set('views', 'views');
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(rootDir, 'public')));
 app.use(methodOverride('_method'));
-
+require('dotenv').config();
 app.use(session({
-  secret: "Rachitxed",
+  secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: true,
   store:MongoStore.create({
