@@ -36,15 +36,6 @@ exports.getHomes = (req, res, next) => {
     })
   );
 };
-
-exports.getBookings = (req, res, next) => {
-  res.render("store/bookings", {
-    pageTitle: "My Bookings",
-    currentPage: "bookings",
-    isLoggedIn:req.isLoggedIn,
-    user: req.session.user,
-  })
-};
 exports.getFavouriteList = (req, res, next) => {
   Favourite.find()
   .populate('houseId')

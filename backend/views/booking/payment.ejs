@@ -1,0 +1,71 @@
+<%- include('../partials/head') %>
+</head>
+<body class="bg-gray-100">
+  <%- include('../partials/nav') %>
+
+  <main class="container mx-auto mt-10 max-w-3xl p-6">
+
+    <div class="bg-white shadow-xl rounded-xl p-8">
+
+      <h2 class="text-3xl font-bold text-red-500 text-center mb-8">
+        Complete Payment
+      </h2>
+
+      <!-- Booking Info -->
+      <div class="border-b pb-6 mb-6">
+
+        <img 
+          src="<%= booking.homeId.photoUrl %>"
+          class="w-full h-52 object-cover rounded-lg mb-4"
+        />
+
+        <h3 class="text-xl font-semibold">
+          <%= booking.homeId.houseName %>
+        </h3>
+
+        <p class="text-gray-600">
+          <%= booking.homeId.location %>
+        </p>
+
+        <p class="mt-2 text-sm text-gray-500">
+          <strong>From:</strong> <%= booking.startDate.toDateString() %>
+        </p>
+
+        <p class="text-sm text-gray-500">
+          <strong>To:</strong> <%= booking.endDate.toDateString() %>
+        </p>
+
+      </div>
+
+      <!-- Fake Payment Box -->
+      <div class="bg-gray-50 rounded-lg p-6 mb-6 text-center">
+
+        <p class="text-lg font-semibold mb-2">
+          Total Amount
+        </p>
+
+        <p class="text-3xl font-bold text-green-600 mb-4">
+          ₹<%= booking.homeId.price %> / night
+        </p>
+
+        <p class="text-sm text-gray-500">
+          (Fake payment for demo)
+        </p>
+
+      </div>
+
+      <!-- Pay Button -->
+      <form 
+        action="/Book/confirm/<%= booking._id %>?_method=PATCH"
+        method="POST"
+      >
+        <button class="w-full bg-green-500 hover:bg-green-600 text-white py-3 rounded-lg font-semibold text-lg">
+          Pay Now
+        </button>
+      </form>
+
+    </div>
+
+  </main>
+</body>
+</html>

@@ -1,7 +1,9 @@
 const mongoose = require('mongoose');
 
-const DB =
-  'mongodb+srv://sharmarachit554_db_user:VQto3C7C1YTWVC1N@rachitdb.mxslh19.mongodb.net/airbnb?retryWrites=true&w=majority&appName=Rachitdb';
+require('dotenv').config();
+
+const DB = process.env.MONGO_URI;
+
 
 const connectDB = async () => {
   try {
