@@ -6,7 +6,7 @@ exports.getIndex = (req, res) => {
   if (!req.isLoggedIn) {
     return res.render("store/index", {
       registeredHomes:[],
-      pageTitle: "airbnb Home",
+      pageTitle: "Homenest Booking platform",
       currentPage: "index",
       isLoggedIn: false,
       user: null,
