@@ -18,7 +18,7 @@ const errorcontroller = require('./controllers/error');
 const { connectDB, DB } = require('./config/db');
 
 const app = express();
-
+app.set('trust proxy', 1); 
 app.set('view engine', 'ejs');
 app.set('views', 'views');
 
@@ -29,11 +29,15 @@ require('dotenv').config();
 app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
-  saveUninitialized: true,
+  saveUninitialized: false,
   store:MongoStore.create({
     mongoUrl: DB,
     collectionName: 'sessions'
-})
+}),
+  cookie: {
+    secure: isProd,                 //  required for Render HTTPS
+    sameSite: isProd ? 'none' : 'lax'
+  }
 }));
 app.use((req, res, next) => {
   console.log("Incoming request:", req.method, req.url, "isLoggedIn=", req.session.isLoggedIn);
