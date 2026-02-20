@@ -26,6 +26,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(rootDir, 'public')));
 app.use(methodOverride('_method'));
 require('dotenv').config();
+const isProd = process.env.NODE_ENV === 'production';
 app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
