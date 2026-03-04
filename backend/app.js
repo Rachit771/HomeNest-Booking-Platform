@@ -18,22 +18,27 @@ const errorcontroller = require('./controllers/error');
 const { connectDB, DB } = require('./config/db');
 
 const app = express();
-
+app.set('trust proxy', 1); 
 app.set('view engine', 'ejs');
 app.set('views', 'views');
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(rootDir, 'public')));
 app.use(methodOverride('_method'));
-
+require('dotenv').config();
+const isProd = process.env.NODE_ENV === 'production';
 app.use(session({
-  secret: "Rachitxed",
+  secret: process.env.SESSION_SECRET,
   resave: false,
-  saveUninitialized: true,
+  saveUninitialized: false,
   store:MongoStore.create({
     mongoUrl: DB,
     collectionName: 'sessions'
-})
+}),
+  cookie: {
+    secure: isProd,                 //  required for Render HTTPS
+    sameSite: isProd ? 'none' : 'lax'
+  }
 }));
 app.use((req, res, next) => {
   console.log("Incoming request:", req.method, req.url, "isLoggedIn=", req.session.isLoggedIn);
@@ -61,7 +66,7 @@ app.use("/host", hostRouter);
 
 app.use(errorcontroller.pageNotFound);
 
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 
 (async () => {
   await connectDB();

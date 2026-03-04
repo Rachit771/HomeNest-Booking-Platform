@@ -6,7 +6,7 @@ exports.getIndex = (req, res) => {
   if (!req.isLoggedIn) {
     return res.render("store/index", {
       registeredHomes:[],
-      pageTitle: "airbnb Home",
+      pageTitle: "Homenest Booking platform",
       currentPage: "index",
       isLoggedIn: false,
       user: null,
@@ -35,15 +35,6 @@ exports.getHomes = (req, res, next) => {
       user: req.session.user,
     })
   );
-};
-
-exports.getBookings = (req, res, next) => {
-  res.render("store/bookings", {
-    pageTitle: "My Bookings",
-    currentPage: "bookings",
-    isLoggedIn:req.isLoggedIn,
-    user: req.session.user,
-  })
 };
 exports.getFavouriteList = (req, res, next) => {
   Favourite.find()

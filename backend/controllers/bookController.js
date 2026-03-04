@@ -1,5 +1,6 @@
 const {createBooking,confirmBooking,cancelBooking}=require('../Service/service') 
 const Home = require("../Model/homes");
+const Booking = require("../Model/Booking");
 exports.createBookingController = async (req, res) => {
   try {
     const {startDate, endDate ,guests, requests} = req.body;
@@ -86,7 +87,6 @@ exports.getBookingPage = async (req, res) => {
   }
 };
 
-const Booking = require("../Model/Booking");
 
 exports.getUserBookings = async (req, res) => {
   try {
@@ -111,5 +111,31 @@ exports.getUserBookings = async (req, res) => {
       isLoggedIn: req.isLoggedIn,
       user: req.session.user,
     });
+  }
+};
+exports.getPaymentPage = async (req, res) => {
+  try {
+    const booking = await Booking.findById(req.params.id)
+      .populate("homeId");
+
+    if (!booking) {
+      return res.status(404).render("404");
+    }
+
+    // security check
+    if (booking.userId.toString() !== req.session.user._id.toString()) {
+      return res.status(403).render("404");
+    }
+
+    res.render("booking/payment", {
+      booking,
+      pageTitle: "Payment",
+      currentPage: "Bookings",
+      isLoggedIn: req.isLoggedIn,
+      user: req.session.user,
+    });
+
+  } catch (err) {
+    res.status(500).render("404");
   }
 };
