@@ -1,5 +1,6 @@
 const Home = require("../Model/homes");
-
+const cloudinary = require("../config/cloudinary");
+const redis=require("../config/redis")
 exports.getAddHome = (req, res, next) => {
   res.render("host/edit-home", {
     editing:false,
@@ -12,7 +13,7 @@ exports.getAddHome = (req, res, next) => {
 exports.getEditHome = (req, res, next) => {
   const homeId=req.params.homeId;
   const editing=req.query.editing ==='true';
-  Home.findById(homeId).then(home=>{
+  Home.findOne({ _id: homeId, hostId: req.session.user._id }).then(home=>{
     if(!home){
       console.log('Home not found')
       return res.redirect('/host/host-home-list')
@@ -30,7 +31,7 @@ exports.getEditHome = (req, res, next) => {
 };
 
 exports.getHostHomes = (req, res, next) => {
-  Home.find().then((registeredHomes) => {
+  Home.find({ hostId: req.session.user._id }).then((registeredHomes) => {
     res.render("host/host-home-list", {
       registeredHomes: registeredHomes,
       pageTitle: "Host Homes List",
@@ -41,45 +42,93 @@ exports.getHostHomes = (req, res, next) => {
   });
 };
 
-exports.postAddHome = (req, res, next) => {
-  const { houseName, price, location, photoUrl,description } = req.body;
-  const home = new Home({houseName, price, location, photoUrl,description});
-  home.save().then(()=>{
-    console.log('Home saved succesfully')
-  });
+exports.postAddHome = async (req, res, next) => {
+  try {
+    const { houseName, price, location, rating, description } = req.body;
 
-  res.redirect("/host/host-home-list");
+    let photoUrl = "";
+
+   //If image is uploaded
+    if (req.file) {
+      const result = await cloudinary.uploader.upload(req.file.path);
+      photoUrl = result.secure_url;
+    }
+
+    const home = new Home({
+      houseName,
+      hostId: req.session.user._id,
+      price,
+      location,
+      rating,
+      photoUrl,
+      description,
+    });
+
+    await home.save();
+
+    console.log("Home saved successfully");
+
+    res.redirect("/host/host-home-list");
+  } catch (err) {
+    console.log("Error while adding home:", err);
+    res.redirect("/host/add-home");
+  }
 };
 
-exports.postEditHome = (req, res, next) => {
-  const { id, houseName, price, location, photoUrl, description } =
-    req.body;
-  Home.findById(id).then((home) => {
+exports.postEditHome = async (req, res, next) => {
+  try {
+    const { id, houseName, price, location, rating, description } = req.body;
+    const home = await Home.findOne({ _id: id, hostId: req.session.user._id });
+
+    if (!home) {
+      return res.redirect("/host/host-home-list");
+    }
+
+    // Update fields
     home.houseName = houseName;
     home.price = price;
     home.location = location;
-    home.photoUrl = photoUrl;
+    home.rating = rating;
     home.description = description;
-    home.save().then((result) => {
-      console.log("Home updated ", result);
-    }).catch(err => {
-      console.log("Error while updating ", err);
-    })
+
+    if (req.file) {
+      const result = await cloudinary.uploader.upload(req.file.path);
+      home.photoUrl = result.secure_url;
+    }
+
+    await home.save();
+
+    //  REDIS CACHE INVALIDATION 
+    // Delete the specific home detail and the main home list
+    await redis.del(`home:${id}`);
+    await redis.del("registered_homes");
+    
+
+    console.log("Home updated and Cache cleared");
     res.redirect("/host/host-home-list");
-  }).catch(err => {
-    console.log("Error while finding home ", err);
-  });
+  } catch (err) {
+    console.log("Error:", err);
+    res.redirect("/host/host-home-list");
+  }
 };
+exports.postDeleteHome = async (req, res, next) => {
+  const homeId = req.params.homeId;
+  
+  try {
+    console.log("Deleting home: ", homeId);
+    
+  
+    await Home.findOneAndDelete({ _id: homeId, hostId: req.session.user._id });
 
-exports.postDeleteHome=(req,res,next)=>{
+    // 2. REDIS CACHE INVALIDATION
+    // Remove it from the cache so it disappears from the app immediately
+    await redis.del(`home:${homeId}`);
+    await redis.del("registered_homes");
 
-const homeId = req.params.homeId;
-  console.log("Came to delete ", homeId);
-  Home.findByIdAndDelete(homeId)
-    .then(() => {
-      res.redirect("/host/host-home-list");
-    })
-    .catch((error) => {
-      console.log("Error while deleting ", error);
-    });
-}
+    console.log("Home deleted and Cache cleared");
+    res.redirect("/host/host-home-list");
+  } catch (error) {
+    console.log("Error while deleting ", error);
+    res.redirect("/host/host-home-list");
+  }
+};

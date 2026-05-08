@@ -1,12 +1,13 @@
 // Core Module
 const path = require('path');
+require('dotenv').config();
 
 // External Module
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
 const MongoStore = require('connect-mongo').default || require('connect-mongo'); //require('connect-mongo').default → picks the ES module default export if it exists|| require('connect-mongo') → fallback for CommonJS style (older versions or Node quirks)
-const { connectRedis } = require('./config/redis');
+const redis = require('./config/redis');
 const methodOverride = require('method-override');
 // Local Module
 const storeRouter = require("./routes/storeRouter");
@@ -20,12 +21,11 @@ const { connectDB, DB } = require('./config/db');
 const app = express();
 app.set('trust proxy', 1); 
 app.set('view engine', 'ejs');
-app.set('views', 'views');
+app.set('views', path.join(__dirname, 'views'));
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(rootDir, 'public')));
 app.use(methodOverride('_method'));
-require('dotenv').config();
 const isProd = process.env.NODE_ENV === 'production';
 app.use(session({
   secret: process.env.SESSION_SECRET,
@@ -53,10 +53,17 @@ app.use((req, res, next) => {
 app.use(authRouter);
 app.use(storeRouter);
 app.use("/host", (req, res, next) => {
-  if (req.isLoggedIn) next(); 
-  else res.redirect("/login");
+  if (!req.isLoggedIn) {
+    return res.redirect("/login");
+  }
+
+  if (req.session.user?.userType !== "host") {
+    return res.redirect("/homes");
+  }
+
+  next();
 });
-app.use("/bookings", (req, res, next) => {
+app.use("/Book", (req, res, next) => {
   if (req.isLoggedIn) next();
   else res.redirect("/login");
 });
@@ -67,10 +74,9 @@ app.use("/host", hostRouter);
 app.use(errorcontroller.pageNotFound);
 
 const PORT = process.env.PORT || 5000;
-
 (async () => {
   await connectDB();
   app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`Server running on port ${PORT}`);
   });
 })();

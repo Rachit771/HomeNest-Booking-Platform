@@ -1,7 +1,17 @@
 const mongoose = require('mongoose');
 const Booking = require('../Model/Booking');
-
+const redis=require('../config/redis')
 async function createBooking(userId, homeId, startDate, endDate) {
+  //Redis Lock
+  const lockKey = `lock:booking:${homeId}`;
+
+  const lock = await redis.set(lockKey, "LOCKED", "NX", "EX", 10);
+  if (!lock) {
+    
+    throw new Error('This home is currently being processed for another booking. Please try again in a few seconds.');
+  }
+
+  //Transaction logic 
   const session = await mongoose.startSession();
   session.startTransaction();
 
@@ -43,6 +53,8 @@ async function createBooking(userId, homeId, startDate, endDate) {
   }
    finally {
   session.endSession();
+  //Release the lock always
+  await redis.del(lockKey);
 }
 }
 async function confirmBooking(bookingId, userId) {

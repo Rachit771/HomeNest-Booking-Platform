@@ -1,6 +1,27 @@
 const {createBooking,confirmBooking,cancelBooking}=require('../Service/service') 
 const Home = require("../Model/homes");
 const Booking = require("../Model/Booking");
+exports.getBookingPage = async (req, res) => {
+  try {
+    const home = await Home.findById(req.params.id);
+
+    if (!home) {
+      return res.status(404).render("404");
+    }
+
+    res.render("booking/book", {
+      home,
+      pageTitle: "Book Home",
+      currentPage: "bookings",
+      isLoggedIn: req.isLoggedIn,
+      user: req.session.user,
+    });
+
+  } catch (err) {
+    res.status(500).render("404");
+  }
+};
+
 exports.createBookingController = async (req, res) => {
   try {
     const {startDate, endDate ,guests, requests} = req.body;
@@ -66,27 +87,6 @@ exports.confirmBookingController = async (req, res) => {
   }
 };
 
-exports.getBookingPage = async (req, res) => {
-  try {
-    const home = await Home.findById(req.params.id);
-
-    if (!home) {
-      return res.status(404).render("404");
-    }
-
-    res.render("booking/book", {
-      home,
-      pageTitle: "Book Home",
-      currentPage: "Bookings",
-      isLoggedIn: req.isLoggedIn,
-      user: req.session.user,
-    });
-
-  } catch (err) {
-    res.status(500).render("404");
-  }
-};
-
 
 exports.getUserBookings = async (req, res) => {
   try {
@@ -99,7 +99,7 @@ exports.getUserBookings = async (req, res) => {
     res.render("booking/bookings-list", {
       bookings,
       pageTitle: "My Bookings",
-      currentPage: "Bookings",
+      currentPage: "bookings",
       isLoggedIn: req.isLoggedIn,
       user: req.session.user,
     });
@@ -107,7 +107,7 @@ exports.getUserBookings = async (req, res) => {
   } catch (err) {
     res.status(500).render("404", {
       pageTitle: "Failed to load bookings",
-      currentPage: "Bookings",
+      currentPage: "bookings",
       isLoggedIn: req.isLoggedIn,
       user: req.session.user,
     });
@@ -126,11 +126,14 @@ exports.getPaymentPage = async (req, res) => {
     if (booking.userId.toString() !== req.session.user._id.toString()) {
       return res.status(403).render("404");
     }
+    if (booking.status !== "PAYMENT_PENDING") {
+        return res.redirect("/bookings");
+    }
 
     res.render("booking/payment", {
       booking,
       pageTitle: "Payment",
-      currentPage: "Bookings",
+      currentPage: "bookings", 
       isLoggedIn: req.isLoggedIn,
       user: req.session.user,
     });

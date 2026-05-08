@@ -6,15 +6,11 @@
   <main class="container mx-auto mt-10 p-6 max-w-4xl">
     <div class="bg-white shadow-lg rounded-xl p-8">
 
-      <!-- Title -->
       <h2 class="text-3xl font-bold text-red-500 text-center mb-8">
         Book Your Stay
       </h2>
 
-      <!-- Booking Form -->
       <form action="/Book/book/<%= home._id %>" method="POST" class="space-y-6">
-
-        <!-- House Info -->
         <div class="flex items-center gap-6 border-b pb-6">
           <img 
             src="<%= home.photoUrl %>" 
@@ -23,13 +19,18 @@
           <div>
             <h3 class="text-xl font-semibold"><%= home.houseName %></h3>
             <p class="text-gray-600"><%= home.location %></p>
+            <div class="mt-2 flex items-center gap-2 text-sm text-gray-700">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5 text-yellow-400">
+                <path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clip-rule="evenodd" />
+              </svg>
+              <span><%= home.rating %> / 5 rating</span>
+            </div>
             <p class="text-red-500 font-bold mt-2">
-              ₹<%= home.price %> / night
+              Rs <%= home.price %> / night
             </p>
           </div>
         </div>
 
-        <!-- Dates -->
         <div class="grid md:grid-cols-2 gap-6">
           <div>
             <label class="block text-gray-700 font-medium mb-2">
@@ -56,7 +57,6 @@
           </div>
         </div>
 
-        <!-- Guests -->
         <div>
           <label class="block text-gray-700 font-medium mb-2">
             Number of Guests
@@ -70,7 +70,6 @@
           />
         </div>
 
-        <!-- Special Requests -->
         <div>
           <label class="block text-gray-700 font-medium mb-2">
             Special Requests
@@ -83,16 +82,14 @@
           ></textarea>
         </div>
 
-        <!-- Submit -->
         <div class="text-center">
           <button 
             type="submit"
             class="bg-red-500 hover:bg-red-600 text-white px-8 py-3 rounded-lg font-semibold transition"
           >
-            Confirm Booking
+            Proceed Further
           </button>
         </div>
-
       </form>
     </div>
   </main>

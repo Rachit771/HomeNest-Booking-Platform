@@ -41,5 +41,10 @@ BookingSchema.index({ homeId: 1, startDate: 1, endDate: 1, status: 1 });
 
 // For expiry-based queries (if you later clean expired bookings)
 BookingSchema.index({ status: 1, expiresAt: 1 });
+//TTL indexing for removing the expired data from mongodb
+BookingSchema.index(
+  { expiresAt: 1 },
+  { expireAfterSeconds: 0 }
+);
 
 module.exports = mongoose.model("Booking", BookingSchema);
